@@ -13,6 +13,7 @@ RUN /bin/bash /setup.sh && \
 COPY requirements.txt /requirements.txt
 RUN PIP_REQUIRE_HASHES= python3.11 -m pip install --upgrade pip && \
     pip3 install packaging && \
+    pip3 install torch>=2.4.0 && \
     PIP_REQUIRE_HASHES= python3.11 -m pip install --upgrade -r /requirements.txt --no-cache-dir && \
     rm /requirements.txt
     
