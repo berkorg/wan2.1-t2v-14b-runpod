@@ -1,0 +1,89 @@
+name: Docker Wan2.1-T2V-14B Runpod Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Tag name for docker image'
+        required: true
+  # push:
+  #  branches: [ "main" ]
+    
+env:
+  UBUNTU_VERSION: 22.04
+  BUILDX_NO_DEFAULT_ATTESTATIONS: 1
+  PROJECT_ID: wan2.1-t2v-14b-runpod
+
+jobs:
+  nvidia-base:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Free Space
+        run: |
+          df -h
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/.ghcup
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          df -h
+      -
+        name: Env Setter
+        run: |
+          echo "PACKAGE_NAME=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
+      -
+        name: Checkout
+        uses: actions/checkout@v3
+      
+      - name: Set up GH_PACKAGES_IMAGE_NAME environment variable
+        run: echo "GH_PACKAGES_IMAGE_NAME=ghcr.io/berkorg/wan2.1-t2v-14b-runpod:${{ github.event.inputs.image_tag }}" >> $GITHUB_ENV
+
+      - name: Print GH_PACKAGES_IMAGE_NAME
+        run: echo "GH_PACKAGES_IMAGE_NAME is $GH_PACKAGES_IMAGE_NAME"
+
+      -
+        name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # - id: "auth"
+      #   uses: "google-github-actions/auth@v1"
+      #   with:
+      #     credentials_json: "${{ secrets.SERVICE_ACCOUNT_KEY }}"
+
+      # -
+      #   name: Login to GAR
+      #   uses: docker/login-action@v3
+      #   with:
+      #     registry: us-central1-docker.pkg.dev
+      #     username: _json_key
+      #     password: ${{ secrets.SERVICE_ACCOUNT_KEY }}
+
+      # - name: "Set up Cloud SDK"
+      #   uses: "google-github-actions/setup-gcloud@v1"
+
+      # - name: "Use gcloud CLI"
+      #   run: "gcloud info"
+
+      # - name: "Docker auth"
+      #   run: |-
+      #     gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      # - name: Build image
+      #   run: docker build ./build --file ./build/Dockerfile --tag ${{ env.IMAGE_NAME }} --build-arg IMAGE_BASE=ghcr.io/berkorg/comfyui-deployer:cuda-11.8.0-runtime-22.04-719fb2c --build-arg PYTHON_VERSION=${{ matrix.build.python }} --build-arg PYTORCH_VERSION=${{ matrix.build.pytorch }} --build-arg COMFYUI_SHA=${{ env.COMFYUI_SHA }}
+
+      # - name: Push image
+      #   run: docker push ${{ env.IMAGE_NAME }} 
+
+      -
+        name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          push: true
+          provenance: false
+          tags: ${{ env.GH_PACKAGES_IMAGE_NAME }}
