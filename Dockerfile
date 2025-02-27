@@ -12,10 +12,9 @@ RUN /bin/bash /setup.sh && \
 # Python dependencies
 COPY requirements.txt /requirements.txt
 RUN PIP_REQUIRE_HASHES= python3.11 -m pip install --upgrade pip && \
-    python3.11 -m pip install --no-deps --upgrade blinker && \
     python3.11 -m pip install packaging && \
     python3.11 -m pip install torch>=2.4.0 && \
-    PIP_REQUIRE_HASHES= python3.11 -m pip install --upgrade -r /requirements.txt --no-cache-dir && \
+    PIP_REQUIRE_HASHES= python3.11 -m pip install --ignore-installed --upgrade -r /requirements.txt --no-cache-dir && \
     rm /requirements.txt
     
 RUN modelscope download Wan-AI/Wan2.1-T2V-14B --local_dir ./Wan2.1-T2V-14B
